@@ -1,17 +1,8 @@
-import os
-
-from settings import DB_STRING, DEBUG
-
-from sqlalchemy import create_engine
+from sqlalchemy import Column, DateTime, String, Integer
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, exc
-
-engine = create_engine(DB_STRING, echo=DEBUG)
 
 Base = declarative_base()
-Session = sessionmaker(bind=engine)
-
-from sqlalchemy import Column, DateTime, String, Integer
+Session = sessionmaker()
 
 class Photo(Base):
 	__tablename__ = 'photo'
