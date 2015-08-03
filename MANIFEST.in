@@ -1,0 +1,2 @@
+recursive-include photogallery/static *
+recursive-include photogallery/templates *

@@ -27,19 +27,21 @@ settings = {
 
 web_app = tornado.web.Application(routes, **settings)
 
-def create_links():
+def add_dynamic_handlers():
 	session = models.Session()
 	folders = session.query(models.Folder).all()
 
+	handlers = []
 	for folder in folders:
-		log.info("Checking symlink for folder: %s", folder.path)
-		link_path = os.path.join(config.STATIC_DIR, folder.hash)
-		if not os.path.exists(link_path):
-			common.symlink(folder.path, link_path)
-			log.info("Symlink created: %s", link_path)
+		log.info("Serving from folder: %s", folder.path)
+		handlers.append(
+			("/dynamic/{}/(.*)".format(folder.hash), tornado.web.StaticFileHandler, {"path": folder.path})
+		)
+	if len(handlers) > 0:
+		web_app.add_handlers(".*$", handlers)
 
 def run(debug=False):
-	#create_links()
+	add_dynamic_handlers()
 
 	server = tornado.httpserver.HTTPServer(web_app)
 	server.listen(5000)
