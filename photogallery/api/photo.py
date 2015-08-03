@@ -2,13 +2,12 @@ import hashlib
 
 import tornado.web
 
-from photogallery import models
-from photogallery.api import common
+from photogallery import api, config
 
 def photo_repr(p):
 	return {
 		"url": API_URL_BASE + "/photo/{}".format(p.id),
-		"image": "/static/{}/{}".format(p.root_hash, p.rel_path),
+		"image": "/dynamic/{}/{}".format(p.root_hash, p.rel_path),
 	}
 	
 class PhotoListHandler(common.JsonRequestHandler):
