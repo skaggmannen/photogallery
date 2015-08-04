@@ -6,7 +6,7 @@ import tornado.web
 class JsonRequestHandler(tornado.web.RequestHandler):
 
 	def prepare(self):
-		if self.request.body is None:
+		if len(self.request.body) == 0:
 			return
 
 		if "application/json" not in self.request.headers.get("Content-Type", ""):

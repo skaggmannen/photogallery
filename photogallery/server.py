@@ -1,5 +1,6 @@
 import logging
 import os
+import signal
 
 import tornado.httpserver
 import tornado.ioloop
@@ -16,19 +17,17 @@ handlers = [
 ]
 
 routes = [
-	(r"/dynamic/(.*)", tornado.web.StaticFileHandler, {"path": config.STATIC_DIR})
+	(r"/thumbs/(.*)", tornado.web.StaticFileHandler, {"path": config.THUMBS_DIR})
 ]
 routes.extend([
-	#(config.API_URL_BASE + h.url, h) for h in handlers
+	(config.API_URL_BASE + h.url, h) for h in handlers
 ])
 
 settings = {
 	"static_path": os.path.join(os.path.dirname(__file__), "static") # Serve static files from "./static" in module dir
 }
 
-web_app = tornado.web.Application(routes, **settings)
-
-def add_dynamic_handlers():
+def add_dynamic_handlers(app):
 	session = models.Session()
 	folders = session.query(models.Folder).all()
 
@@ -39,11 +38,34 @@ def add_dynamic_handlers():
 			("/dynamic/{}/(.*)".format(folder.hash), tornado.web.StaticFileHandler, {"path": folder.path})
 		)
 	if len(handlers) > 0:
-		web_app.add_handlers(".*$", handlers)
+		app.add_handlers(".*$", handlers)
 
-def run(debug=False):
-	add_dynamic_handlers()
+def sigint_handler():
+	log.info("Closing down...")
+	tornado.ioloop.IOLoop.instance().stop()
 
-	server = tornado.httpserver.HTTPServer(web_app)
+def run():
+	app = tornado.web.Application(routes, **settings)
+
+	add_dynamic_handlers(app)
+
+	ioloop = tornado.ioloop.IOLoop.instance()
+
+	signal.signal(signal.SIGINT, lambda sig, frame: ioloop.add_callback_from_signal(sigint_handler))
+
+	server = tornado.httpserver.HTTPServer(app)
 	server.listen(5000)
-	tornado.ioloop.IOLoop.current().start()
+	
+	ioloop.start()
+
+if __name__ == "__main__":
+	import sys
+
+	if "debug" in sys.argv:
+		settings["debug"] = True
+
+
+	config.init()
+	models.init()
+
+	run()
