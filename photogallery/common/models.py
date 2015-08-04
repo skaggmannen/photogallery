@@ -1,3 +1,6 @@
+import logging
+import os
+
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -19,6 +22,7 @@ class Photo(Base):
 	folder_id = Column(Integer, ForeignKey('folder.id'))
 	dir = Column(String)
 	name = Column(String)
+	md5 = Column(String)
 
 	# Convenience fields for filtering
 	year = Column(Integer)
@@ -29,7 +33,7 @@ class Photo(Base):
 	date_time = Column(DateTime)
 
 	def __repr__(self):
-		return "Photo<id={1},path={2}>".format(self.id, os.path.join(self.root, self.rel_path))
+		return "Photo<id={0}>".format(self.id)
 
 
 def init():

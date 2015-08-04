@@ -1,14 +1,18 @@
+import hashlib
 import logging
+import multiprocessing
 import os
 import re
 
 log = logging.getLogger(__name__)
 
-from photogallery.common import models
+from PIL import Image
+
+from photogallery.common import config, models
 
 file_includes = "|".join([
-	r".*\.jpg$",
-	r".*\.JPG$",
+	r"^.*\.jpg$",
+	r"^.*\.JPG$",
 ])
 
 file_excludes = "|".join([
@@ -19,25 +23,106 @@ dir_excludes = "|".join([
 	r"^\..+$",
 ])
 
-def exlude_dir(dir):
-	for p in exlude_dir_patterns:
-		if re.match(p, dir) is not None:
-			return True
-	return False
+def photo_path(folder, photo):
+	return os.path.join(folder, photo.dir, photo.name)
+
+def read_md5(photo_details):
+	path, md5 = photo_details
+	try:
+		f = open(path, "rb")
+		m = hashlib.md5()
+		m.update(f.read())
+		f.close()
+		return m.hexdigest()
+	except IOError as e:
+		return None
+
+def read_exif(photo_details):
+	pass
+
+def create_thumb(photo_details):
+	path, md5 = photo_details
+
+	if md5 is None:
+		return
+
+	thumb_path = os.path.join(config.THUMBS_DIR, md5 + ".jpg")
+	if os.path.exists(thumb_path):
+		return
+
+	try:
+		i = Image.open(path)
+		i.thumbnail(config.THUMBS_SIZE)
+		i.save(thumb_path)
+	except IOError as e:
+		return
+
+pool = multiprocessing.Pool()
+def pool_job(fn, folder, photos):
+	return pool.map(fn, [(photo_path(folder, p), p.md5) for p in photos])
 
 def scan_folder(folder):
 	session = models.Session()
 	for root, dirs, files in os.walk(folder.path):
 		log.info("Scanning: %s", root)
+		dir = os.path.relpath(root, folder.path)
+		query = session.query(models.Photo).filter_by(folder_id=folder.id, dir=dir)
 
-		existing = session.query(models.Photo).filter_by(folder_id=folder.id, dir=os.path.relpath(root, folder.path)).all()
+		existing = [photo.name for photo in query.all()]
 		log.info("Existing: %s", ", ".join(existing))
 
 		dirs[:] = [os.path.relpath(os.path.join(root, d), folder.path) for d in dirs if not re.match(dir_excludes, d)]
-		files = [os.path.relpath(os.path.join(root, f), folder.path) for f in files if re.match(file_includes, f) and not re.match(file_excludes, f)]
-
 		log.info("Dirs: %s", ", ".join(dirs))
-		log.info("Files: %s", ", ".join(files))
+
+		photos = []
+
+		for f in files:
+			log.info("Checking file: %s", f)
+			path = os.path.join(root, f)
+			if not re.match(file_includes, f):
+				log.debug("File does not match include patterns")
+				continue
+			if re.match(file_excludes, f):
+				log.debug("File matches exclude pattern")
+				continue
+			if f in existing:
+				log.debug("File already added")
+				continue
+
+			log.info("Adding file: %s", path)
+			photo = models.Photo()
+			photo.dir = dir
+			photo.name = f
+			photo.folder_id = folder.id
+
+			photos.append(photo)
+
+		if len(photos) == 0:
+			continue
+
+		pool = multiprocessing.Pool()
+		log.info("Calculating MD5s...")
+		for i, md5 in enumerate(pool_job(read_md5, folder.path, photos)):
+			if md5 is None:
+				log.error("MD5 calc failed for file: %s", photo_path(folder, photo))
+			photos[i].md5 = md5
+
+		log.info("Reading EXIF...")
+		for i, exif in enumerate(pool_job(read_exif, folder.path, photos)):
+			if  exif is None:
+				continue
+			orientation, date = exif
+			photos[i].orientation = orientation
+			photos[i].date = date
+
+		log.info("Creating thumbs...")
+		seen = set()
+		unique_photos = [p for p in photos if not p.md5 is None]
+		unique_photos = [p for p in unique_photos if not p.md5 in seen or seen.add(p.md5)]
+		pool_job(create_thumb, folder.path, unique_photos)
+
+		session.add_all(photos)
+		session.commit()
 
 def run():
 	session = models.Session()
@@ -45,3 +130,20 @@ def run():
 	for folder in folders:
 		log.info("Scanning folder: %s", folder.path)
 		scan_folder(folder)
+
+
+if __name__ == "__main__":
+	import sys
+
+	config.init()
+	models.init()
+
+	if "purge" in sys.argv:
+		response = raw_input("This will purge all photos. Type YES to Continue: ")
+		if response == "YES":
+			log.info("Purging all photos...")
+			session = models.Session()
+			session.query(models.Photo).delete()
+			session.commit()
+
+	run()
