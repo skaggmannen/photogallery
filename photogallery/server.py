@@ -5,13 +5,14 @@ import tornado.httpserver
 import tornado.ioloop
 import tornado.web
 
-from photogallery import api, common, config, models
+from photogallery.common import config, models
+from photogallery.api import photo
 
 log = logging.getLogger(__name__)
 
 handlers = [
-	api.photo.PhotoListHandler,
-	api.photo.PhotoDetailsHandler,
+	photo.PhotoListHandler,
+	photo.PhotoDetailsHandler,
 ]
 
 routes = [

@@ -10,7 +10,8 @@ setup(
 	url="https://github.com/skaggmannen/photogallery",
 	description="A Photo Gallery Web App",
 	install_requires=[
-		"tornado",
+		"pyzmq",
 		"sqlalchemy",
+		"tornado",
 	],
-	)
+)

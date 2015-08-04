@@ -1,3 +1,6 @@
+import config
+import models
+
 def symlink(source, link_name):
     import os
     os_symlink = getattr(os, "symlink", None)

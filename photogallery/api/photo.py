@@ -1,16 +1,18 @@
 import hashlib
 
+import sqlalchemy
 import tornado.web
 
-from photogallery import api, config
+from photogallery.common import config, models
+from photogalleru.api import JsonRequestHandler
 
 def photo_repr(p):
 	return {
-		"url": API_URL_BASE + "/photo/{}".format(p.id),
+		"url": config.API_URL_BASE + "/photo/{}".format(p.id),
 		"image": "/dynamic/{}/{}".format(p.root_hash, p.rel_path),
 	}
 	
-class PhotoListHandler(common.JsonRequestHandler):
+class PhotoListHandler(JsonRequestHandler):
 	url = r"/photo/"
 
 	def get(self):
@@ -53,7 +55,7 @@ class PhotoListHandler(common.JsonRequestHandler):
 		}
 
 
-class PhotoDetailsHandler(common.JsonRequestHandler):
+class PhotoDetailsHandler(JsonRequestHandler):
 	url = r"/photo/(?P<id>\d+)"
 
 	def get(self, id=None):
