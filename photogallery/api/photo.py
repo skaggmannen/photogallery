@@ -4,7 +4,7 @@ import sqlalchemy
 import tornado.web
 
 from photogallery.common import config, models
-from photogalleru.api import JsonRequestHandler
+from photogallery.api import JsonRequestHandler
 
 def photo_repr(p):
 	return {
