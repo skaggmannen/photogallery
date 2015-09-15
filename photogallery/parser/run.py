@@ -39,6 +39,7 @@ def read_md5(photo_details):
 		f.close()
 		return m.hexdigest()
 	except IOError as e:
+		log.error("MD5 calc failed for file: %s", path)
 		return None
 
 def create_thumb(photo_details):
@@ -56,6 +57,7 @@ def create_thumb(photo_details):
 		i.thumbnail(config.THUMBS_SIZE)
 		i.save(thumb_path)
 	except IOError as e:
+		log.error("Failed to create thumb for file %s", path)
 		return
 
 pool = multiprocessing.Pool()
@@ -104,8 +106,6 @@ def scan_folder(folder):
 		pool = multiprocessing.Pool()
 		log.info("Calculating MD5s...")
 		for i, md5 in enumerate(pool_job(read_md5, folder.path, photos)):
-			if md5 is None:
-				log.error("MD5 calc failed for file: %s", photo_path(folder.path, photo))
 			photos[i].md5 = md5
 
 		log.info("Reading EXIF...")
