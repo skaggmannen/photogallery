@@ -1,6 +1,4 @@
-import hashlib
 import logging
-import os
 
 log = logging.getLogger(__name__)
 
@@ -8,21 +6,7 @@ import sqlalchemy
 import tornado.web
 
 from photogallery.common import config, models
-from photogallery.api import JsonRequestHandler
-
-def photo_repr(p, f):
-	if p.dir != "":
-		rel_path = os.path.join(p.dir, p.name).encode("utf-8")
-		print(rel_path)
-	else:
-		rel_path = p.name
-
-	return {
-		"url": config.API_URL_BASE + "/photo/{0}".format(p.id),
-		"image": "/dynamic/{0}/{1}".format(f.hash, rel_path),
-		"thumb": "/thumbs/{0}.jpg".format(p.md5),
-		"path": os.path.join(f.path, p.dir, p.name).encode("utf-8"),
-	}
+from photogallery.api import JsonRequestHandler, photo_repr
 	
 class PhotoListHandler(JsonRequestHandler):
 	url = r"/photo/"
@@ -30,42 +14,32 @@ class PhotoListHandler(JsonRequestHandler):
 	def get(self):
 		session = models.Session()
 
-		limit = self.get_query_argument("limit", default=100)
-		offset = self.get_query_argument("offset", default=0)
-
-		results = session.query(models.Photo, models.Folder).limit(limit).offset(offset).all()
-
-		self.write({
-			"photos": [photo_repr(p, f) for p, f in results]
-		})
-		self.finish()
-
-	def post(self):
-		session = models.Session()
-
-		photos = []
+		photos = session.query(models.Photo, models.Folder)
+		total_count = None
 
 		try:
-			for data in self.json_args["photos"]:
-				p = models.Photo()
-				p.root_hash = hashlib.md5(data["root"]).hexdigest()
-				p.root = data["root"]
-				p.rel_path = data["rel_path"]
+			limit = self.get_query_argument("limit", default=100)
+			offset = self.get_query_argument("offset", default=0)
+			year = self.get_query_argument("year", default=None)
+			month = self.get_query_argument("month", default=None)
 
-				photos.append(p)
-		except KeyError as e:
+			if year is not None:
+				photos = photos.filter(models.Photo.year==int(year))
+			if month is not None:
+				photos = photos.filter(models.Photo.month==int(month))
+
+			total_count = photos.count()
+
+			photos = photos.limit(int(limit)).offset(int(offset))
+
+		except ValueError as e:
 			raise tornado.web.HTTPError(400)
 
-		session.add_all(photos)
-		session.commit()
-
-		self.set_status(201)
-
 		self.write({
-			"photos": [API_URL_BASE + "/photo/{}".format(p.id) for p in photos]
+			"total_count": total_count,
+			"photos": [photo_repr(p, f) for p, f in photos.all()]
 		})
 		self.finish()
-
 
 class PhotoDetailsHandler(JsonRequestHandler):
 	url = r"/photo/(?P<id>\d+)"

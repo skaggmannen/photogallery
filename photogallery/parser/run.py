@@ -1,14 +1,18 @@
+import datetime
 import hashlib
 import logging
 import multiprocessing
 import os
 import re
+import time
 
 log = logging.getLogger(__name__)
 
-from PIL import Image
+import PIL
+import PIL.ExifTags
 
 from photogallery.common import config, models
+from photogallery.parser import exif
 
 file_includes = "|".join([
 	r"^.*\.jpg$",
@@ -37,9 +41,6 @@ def read_md5(photo_details):
 	except IOError as e:
 		return None
 
-def read_exif(photo_details):
-	pass
-
 def create_thumb(photo_details):
 	path, md5 = photo_details
 
@@ -51,7 +52,7 @@ def create_thumb(photo_details):
 		return
 
 	try:
-		i = Image.open(path)
+		i = PIL.Image.open(path)
 		i.thumbnail(config.THUMBS_SIZE)
 		i.save(thumb_path)
 	except IOError as e:
@@ -59,7 +60,7 @@ def create_thumb(photo_details):
 
 pool = multiprocessing.Pool()
 def pool_job(fn, folder, photos):
-	return pool.map(fn, [(photo_path(folder, p), p.md5) for p in photos])
+	return [fn((photo_path(folder, p), p.md5)) for p in photos]
 
 def scan_folder(folder):
 	session = models.Session()
@@ -108,12 +109,15 @@ def scan_folder(folder):
 			photos[i].md5 = md5
 
 		log.info("Reading EXIF...")
-		for i, exif in enumerate(pool_job(read_exif, folder.path, photos)):
-			if  exif is None:
+		for i, info in enumerate(pool_job(exif.read, folder.path, photos)):
+			if  info is None:
 				continue
-			orientation, date = exif
+
+			orientation, date_time, year, month = info
 			photos[i].orientation = orientation
-			photos[i].date = date
+			photos[i].date_time = date_time
+			photos[i].year = year
+			photos[i].month = month
 
 		log.info("Creating thumbs...")
 		seen = set()

@@ -1,0 +1,140 @@
+body {
+    padding-top: 50px;
+}
+
+.sidebar {
+    position: fixed;
+    top: 51px;
+    bottom: 0;
+    left: 0;
+    z-index: 1000;
+    display: block;
+    padding: 5px;
+    overflow-x: hidden;
+    overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
+    background-color: #f5f5f5;
+    border-right: 1px solid #eee;
+}
+
+@media (min-width: 1200px) {
+    .sidebar {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 767px) {
+    .sidebar {
+        position: relative;
+        top: 0;
+        height: 100%;
+        width: 200px;
+    }
+
+    .sidebar-drawer {
+        position: fixed;
+        top: 0;
+        z-index: 9999;
+        box-shadow: 0px 0px 40px #333;
+        height: 100%;
+    }
+    .sidebar-drawer.collapsed {
+        transition: 200ms;
+        left: -220px;
+    }
+
+    .sidebar-drawer.expanded {
+        transition: 200ms;
+        left: 0px;
+    }
+
+    .show-filter-button {
+        display: block;
+        width: 40px;
+        height: 40px;
+        border: 1px solid red;
+        background: red;
+        color: white;
+        line-height: 40px;
+        border-radius: 20px;
+        position: absolute;
+        bottom: 40px;
+        left: 260px;
+        box-shadow: 0px 0px 5px #333;
+    }
+
+    .show-filter-button .glyphicon {
+        position: absolute;
+        font-size: 20px;
+        top: 8px;
+        left: 8px;
+    }
+}
+
+.sidebar ul {
+    width: 100%;
+    padding: 0;
+}
+
+.sidebar > ul > li {
+    margin-bottom: 5px;
+}
+
+.sidebar li > ul {
+    display: none;
+}
+
+.sidebar li > ul.expanded {
+    display: block;
+}
+
+.sidebar li {
+    width: 100%;
+    list-style-type: none;
+}
+
+.sidebar li > .item-label {
+    padding: 5px;
+   -moz-user-select: -moz-none;
+   -khtml-user-select: none;
+   -webkit-user-select: none;
+
+   /*
+     Introduced in IE 10.
+     See http://ie.microsoft.com/testdrive/HTML5/msUserSelect/
+   */
+   -ms-user-select: none;
+   user-select: none;
+}
+
+.sidebar li li > .item-label {
+    padding-left: 25px;
+}
+
+.sidebar li li li > .item-label {
+    padding-left: 35px;
+}
+
+.sidebar .item-label {
+    display: inline-block;
+    width: 100%;
+    padding: 0 5px;
+    cursor: pointer;
+}
+
+.sidebar .item-label a {
+    color: inherit;
+}
+
+.sidebar .item-label:hover {
+    color: #f5f5f5;
+    background-color: #8bf;
+}
+
+.sidebar .item-label.active {
+    color: #f5f5f5;
+    background-color: #48f;
+}
+
+.main {
+    padding: 20px;
+}

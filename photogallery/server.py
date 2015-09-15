@@ -4,19 +4,30 @@ import signal
 
 import tornado.httpserver
 import tornado.ioloop
+import tornado.template
 import tornado.web
 
+loader = tornado.template.Loader(os.path.join(os.path.dirname(__file__), "templates"))
+
 from photogallery.common import config, models
-from photogallery.api import photo
+from photogallery.api import date, photo
 
 log = logging.getLogger(__name__)
 
+class IndexHandler(tornado.web.RequestHandler):
+
+	def get(self):
+		self.write(loader.load("index.html").generate())
+		self.finish()
+
 handlers = [
+	date.DateListHandler,
 	photo.PhotoListHandler,
 	photo.PhotoDetailsHandler,
 ]
 
 routes = [
+	(r"/", IndexHandler),
 	(r"/thumbs/(.*)", tornado.web.StaticFileHandler, {"path": config.THUMBS_DIR})
 ]
 routes.extend([
