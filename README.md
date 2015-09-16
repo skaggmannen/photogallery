@@ -20,6 +20,8 @@ cd photogallery
 pip install --upgrade -e .
 ```
 
+## Running
+
 Right now you need to manually add the folders you want to scan:
 
 ```shell
