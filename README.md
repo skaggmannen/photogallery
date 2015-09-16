@@ -11,21 +11,10 @@ $ cd photogallery
 $ pip install -e .
 ```
 
-Right now you need to manually add the folders you want to scan from the Python console:
+Right now you need to manually add the folders you want to scan:
 
-```python
-import hashlib
-from photogallery.common import models, init
-
-init()
-
-f = models.Folder()
-f.path = "/path/to/photos"
-f.hash = hashlib.md5(f.path).hexdigest()
-
-session = models.Session()
-session.add(f)
-session.commit()
+```bash
+$ python -m photogallery.parser.add /path/to/folder1 /path/to/folder2
 ```
 
 After this is done you can start the parser:
