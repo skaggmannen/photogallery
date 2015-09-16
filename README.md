@@ -2,6 +2,15 @@
 
 A photo gallery webapp.
 
+## Requirements
+You need to have Python (2.7) and PIP installed, and if you're on Linux you need to have `libjpeg-dev` installed in order for the Pillow Python library to be compiled with JPEG support.
+
+Run the following on Ubuntu:
+
+```bash
+$ sudo apt-get update && sudo apt-get install python python-pip libjpeg-dev
+```
+
 ## Setup
 Clone the repo and then install using pip:
 
