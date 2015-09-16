@@ -17,7 +17,7 @@ Clone the repo and then install using pip:
 ```bash
 $ git clone https://github.com/skaggmannen/photogallery.git
 $ cd photogallery
-$ pip install -e .
+$ pip install --upgrade -e .
 ```
 
 Right now you need to manually add the folders you want to scan:
