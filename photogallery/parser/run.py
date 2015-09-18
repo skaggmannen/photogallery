@@ -74,7 +74,12 @@ def scan_folder(folder):
 		existing = [photo.name for photo in query.all()]
 		log.info("Existing: %s", ", ".join(existing))
 
-		dirs[:] = [os.path.relpath(os.path.join(root, d), folder.path) for d in dirs if not re.match(dir_excludes, d)]
+		dirs[:] = [
+			d
+			for d in dirs 
+			if not re.match(dir_excludes, d)
+		]
+
 		log.info("Dirs: %s", ", ".join(dirs))
 
 		photos = []
