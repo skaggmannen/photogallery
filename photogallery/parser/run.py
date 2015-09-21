@@ -60,7 +60,6 @@ def create_thumb(photo_details):
 		log.error("Failed to create thumb for file %s", path)
 		return
 
-pool = multiprocessing.Pool()
 def pool_job(fn, folder, photos):
 	return [fn((photo_path(folder, p), p.md5)) for p in photos]
 

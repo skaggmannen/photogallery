@@ -40,6 +40,9 @@ def read(photo_details):
 				except ValueError as e:
 					log.warn(e)
 					pass
+			else:
+				log.warn("%s didn't match any pattern", timestamp)
+				timestamp = None
 
 		if timestamp is None:
 			log.info("EXIF date not found for image %s", path)
