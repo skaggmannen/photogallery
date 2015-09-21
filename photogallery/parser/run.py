@@ -30,8 +30,7 @@ dir_excludes = "|".join([
 def photo_path(folder, photo):
 	return os.path.join(folder, photo.dir, photo.name)
 
-def read_md5(photo_details):
-	path, md5 = photo_details
+def read_md5(path):
 	try:
 		f = open(path, "rb")
 		m = hashlib.md5()
@@ -42,9 +41,7 @@ def read_md5(photo_details):
 		log.error("MD5 calc failed for file: %s", path)
 		return None
 
-def create_thumb(photo_details):
-	path, md5 = photo_details
-
+def create_thumb(path, md5):
 	if md5 is None:
 		return
 
@@ -60,9 +57,6 @@ def create_thumb(photo_details):
 		log.error("Failed to create thumb for file %s", path)
 		return
 
-def pool_job(fn, folder, photos):
-	return [fn((photo_path(folder, p), p.md5)) for p in photos]
-
 def scan_folder(folder):
 	session = models.Session()
 	for root, dirs, files in os.walk(folder.path):
@@ -71,7 +65,7 @@ def scan_folder(folder):
 		query = session.query(models.Photo).filter_by(folder_id=folder.id, dir=dir)
 
 		existing = [photo.name for photo in query.all()]
-		log.info("Existing: %s", ", ".join(existing))
+		log.debug("Existing: %s", ", ".join(existing))
 
 		dirs[:] = [
 			d
@@ -79,12 +73,11 @@ def scan_folder(folder):
 			if not re.match(dir_excludes, d)
 		]
 
-		log.info("Dirs: %s", ", ".join(dirs))
+		log.debug("Dirs: %s", ", ".join(dirs))
 
-		photos = []
-
+		files_added = 0
 		for f in files:
-			log.info("Checking file: %s", f)
+			log.debug("Checking file: %s", f)
 			path = os.path.join(root, f)
 			if not re.match(file_includes, f):
 				log.debug("File does not match include patterns")
@@ -96,41 +89,25 @@ def scan_folder(folder):
 				log.debug("File already added")
 				continue
 
-			log.info("Adding file: %s", path)
+			log.debug("Adding file: %s", path)
+
 			photo = models.Photo()
 			photo.dir = dir
 			photo.name = f
 			photo.folder_id = folder.id
+			photo.md5 = read_md5(path)
+			photo.orientation, photo.date_time = exif.read(path)
+			photo.year = photo.date_time.year
+			photo.month = photo.date_time.month
 
-			photos.append(photo)
+			create_thumb(path, photo.md5)
 
-		if len(photos) == 0:
-			continue
+			session.add(photo)
+			session.commit()
 
-		pool = multiprocessing.Pool()
-		log.info("Calculating MD5s...")
-		for i, md5 in enumerate(pool_job(read_md5, folder.path, photos)):
-			photos[i].md5 = md5
+			files_added += 1
 
-		log.info("Reading EXIF...")
-		for i, info in enumerate(pool_job(exif.read, folder.path, photos)):
-			if  info is None:
-				continue
-
-			orientation, date_time, year, month = info
-			photos[i].orientation = orientation
-			photos[i].date_time = date_time
-			photos[i].year = year
-			photos[i].month = month
-
-		log.info("Creating thumbs...")
-		seen = set()
-		unique_photos = [p for p in photos if not p.md5 is None]
-		unique_photos = [p for p in unique_photos if not p.md5 in seen or seen.add(p.md5)]
-		pool_job(create_thumb, folder.path, unique_photos)
-
-		session.add_all(photos)
-		session.commit()
+		log.info("Added %d new files...", files_added)
 
 def run():
 	session = models.Session()

@@ -9,7 +9,7 @@ import tornado.web
 
 loader = tornado.template.Loader(os.path.join(os.path.dirname(__file__), "templates"))
 
-from photogallery.common import config, models
+from photogallery.common import config, init, models
 from photogallery.api import date, photo
 
 log = logging.getLogger(__name__)
@@ -56,6 +56,8 @@ def sigint_handler():
 	tornado.ioloop.IOLoop.instance().stop()
 
 def run():
+	settings["debug"] = config.DEBUG
+
 	app = tornado.web.Application(routes, **settings)
 
 	add_dynamic_handlers(app)
@@ -70,13 +72,5 @@ def run():
 	ioloop.start()
 
 if __name__ == "__main__":
-	import sys
-
-	if "debug" in sys.argv:
-		settings["debug"] = True
-
-
-	config.init()
-	models.init()
-
+	init()
 	run()

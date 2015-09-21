@@ -9,8 +9,7 @@ import PIL.Image
 import PIL.ExifTags
 
 
-def read(photo_details):
-	path, md5 = photo_details
+def read(path):
 	try:
 		timestamp = None
 		orientation = 1
@@ -51,9 +50,7 @@ def read(photo_details):
 
 		return (
 			orientation,
-			timestamp,
-			timestamp.year,
-			timestamp.month
+			timestamp
 		)
 	except IOError as e:
-		return None
+		return (None, None)
