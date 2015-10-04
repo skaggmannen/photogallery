@@ -1,6 +1,7 @@
 import datetime
 import logging
 import os
+import sys
 
 log = logging.getLogger(__name__)
 
@@ -13,11 +14,12 @@ def read(path):
 	try:
 		timestamp = None
 		orientation = 1
-		i = PIL.Image.open(path)
-		exif = i._getexif()
-		if exif is not None:
-			exif = {
-				PIL.ExifTags.TAGS[k]: v
+		try:
+			i = PIL.Image.open(path)
+			exif = i._getexif()
+			if exif is not None:
+				exif = {
+					PIL.ExifTags.TAGS[k]: v
 				for k, v in exif.items()
 				if k in PIL.ExifTags.TAGS
 			}
@@ -28,7 +30,10 @@ def read(path):
 				exif.get("DateTime", False) or \
 				None
 			orientation = exif.get("Orientation", 1)
-		del i
+			del i
+		except:
+			e = sys.exc_info()[0]
+			log.error("Failed to read exif: %s", e)
 
 		if timestamp is not None:
 			patterns = ["%Y:%m:%d %H:%M:%S", "%Y:%m:%d %H:%M: %S"]

@@ -56,6 +56,9 @@ def create_thumb(path, md5):
 	except IOError as e:
 		log.error("Failed to create thumb for file %s", path)
 		return
+	except IndexError as e:
+		log.error("Failed to create thumb for file %s", path)
+		return
 
 def scan_folder(folder):
 	session = models.Session()
@@ -97,6 +100,10 @@ def scan_folder(folder):
 			photo.folder_id = folder.id
 			photo.md5 = read_md5(path)
 			photo.orientation, photo.date_time = exif.read(path)
+			if photo.orientation is None or photo.date_time is None:
+				log.error("Skipping %s due to errors...", path)
+				continue
+
 			photo.year = photo.date_time.year
 			photo.month = photo.date_time.month
 
