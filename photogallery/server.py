@@ -56,9 +56,7 @@ def sigint_handler():
 	tornado.ioloop.IOLoop.instance().stop()
 
 def run():
-	settings["debug"] = config.DEBUG
-
-	app = tornado.web.Application(routes, **settings)
+	app = tornado.web.Application(routes, debug=True, compiled_template_cache=False, **settings)
 
 	add_dynamic_handlers(app)
 

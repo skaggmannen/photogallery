@@ -1,0 +1,7 @@
+<span class="item-label" ng-click="item.select()" ng-class="{ active: item.isSelected }">
+	<span ng-if="item.iconClass" ng-class="item.iconClass"></span>
+	{{ item.label }}
+</span>
+<ul ng-if="item.children.length > 0" ng-repeat="child in item.children" ng-class="{ expanded: item.isExpanded() }">
+	<li><tree item="child"></tree></li>
+</ul>
