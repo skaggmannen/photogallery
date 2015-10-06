@@ -30,6 +30,7 @@ class PhotoListHandler(JsonRequestHandler):
 
 			total_count = photos.count()
 
+			photos = photos.order_by(models.Photo.date_time)
 			photos = photos.limit(int(limit)).offset(int(offset))
 
 		except ValueError as e:
