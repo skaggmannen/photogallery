@@ -3,7 +3,7 @@ import os
 
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import relationship, sessionmaker
 
 from photogallery.common import config
 
@@ -20,6 +20,8 @@ class Photo(Base):
 	__tablename__ = 'photo'
 	id = Column(Integer, primary_key=True)
 	folder_id = Column(Integer, ForeignKey('folder.id'))
+	folder = relationship("Folder", backref="photos")
+
 	dir = Column(String)
 	name = Column(String)
 	md5 = Column(String)

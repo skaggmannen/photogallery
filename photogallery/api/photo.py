@@ -14,7 +14,7 @@ class PhotoListHandler(JsonRequestHandler):
 	def get(self):
 		session = models.Session()
 
-		photos = session.query(models.Photo, models.Folder)
+		photos = session.query(models.Photo)
 		total_count = None
 
 		try:
@@ -34,6 +34,9 @@ class PhotoListHandler(JsonRequestHandler):
 
 		except ValueError as e:
 			raise tornado.web.HTTPError(400)
+
+		# Do a join on the limited set
+		photos = photos.from_self(models.Photo, models.Folder)
 
 		self.write({
 			"total_count": total_count,
