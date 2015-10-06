@@ -3,7 +3,29 @@ function Image() {
 
 	self.myId = ko.observable();
 	self.myUrl = ko.observable();
+	self.myOrientation = ko.observable();
 	self.myThumbUrl = ko.observable();
+	self.myIsLoaded = ko.observable(false);
+	self.myFillWidth = ko.observable(false);
+	self.myFillHeight = ko.observable(true);
+
+	self.myOnLoad = function(aImage, aEvent) {
+		self.myIsLoaded(true);
+
+		var target = $(aEvent.target);
+		var width = target.width();
+		var height = target.height();
+		if (width > height)
+		{
+			self.myFillHeight(true);
+			self.myFillWidth(false);
+		}
+		else
+		{
+			self.myFillHeight(false);
+			self.myFillWidth(true);
+		}
+	};
 };
 
 function Data() {
@@ -114,6 +136,7 @@ function Data() {
 								
 								images[aOffset + i].myId(aData.photos[i].id);
 								images[aOffset + i].myUrl(aData.photos[i].url);
+								images[aOffset + i].myOrientation(aData.photos[i].orientation);
 								images[aOffset + i].myThumbUrl(aData.photos[i].thumb);
 							}
 						});
@@ -142,6 +165,7 @@ function Data() {
 							image = new Image();
 							image.myId(aData.photos[i].id);
 							image.myUrl(aData.photos[i].url);
+							image.myOrientation(aData.photos[i].orientation);
 							image.myThumbUrl(aData.photos[i].thumb);
 
 							self.myImages[i] = image;
