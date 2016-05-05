@@ -12,6 +12,7 @@ def photo_repr(p, f):
 		rel_path = p.name
 
 	return {
+		"id": p.id,
 		"url": config.API_URL_BASE + "/photo/{0}".format(p.id),
 		"image": "/dynamic/{0}/{1}".format(f.hash, rel_path),
 		"thumb": "/thumbs/{0}.jpg".format(p.md5),

@@ -54,6 +54,10 @@ class PhotoDetailsHandler(JsonRequestHandler):
 		try:
 			p, f = session.query(models.Photo, models.Folder).filter_by(id=id).one()
 		except sqlalchemy.orm.exc.MultipleResultsFound as e:
+			print("MultipleResultsFound error: {}".format(e))
+			results = session.query(models.Photo, models.Folder).filter_by(id=id).all()
+			for p, f in results:
+				print(photo_repr(p, f))
 			raise tornado.web.HTTPError(500)
 		except sqlalchemy.orm.exc.NoResultsFound as e:
 			raise tornado.web.HTTPError(404)

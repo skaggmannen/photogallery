@@ -135,7 +135,7 @@ function Data() {
 								}
 								
 								images[aOffset + i].myId(aData.photos[i].id);
-								images[aOffset + i].myUrl(aData.photos[i].url);
+								images[aOffset + i].myUrl(aData.photos[i].image);
 								images[aOffset + i].myOrientation(aData.photos[i].orientation);
 								images[aOffset + i].myThumbUrl(aData.photos[i].thumb);
 							}
@@ -164,7 +164,7 @@ function Data() {
 						{
 							image = new Image();
 							image.myId(aData.photos[i].id);
-							image.myUrl(aData.photos[i].url);
+							image.myUrl(aData.photos[i].image);
 							image.myOrientation(aData.photos[i].orientation);
 							image.myThumbUrl(aData.photos[i].thumb);
 
@@ -189,7 +189,7 @@ function Data() {
 			$.get("/api/v1/photo/" + aImageId)
 				.done(function getImageDone(aData)
 				{
-					self.myImageCache[aImageId].myUrl(aData.url);
+					self.myImageCache[aImageId].myUrl(aData.image);
 					self.myImageCache[aImageId].myThumbUrl(aData.thumb);
 				});
 		}
